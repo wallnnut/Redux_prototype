@@ -1,5 +1,5 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import React, { useEffect, useState } from "react";
+import ReactDOM from "react-dom/client";
 
 function taskReducer(state, action) {
 	switch (action.type) {
@@ -19,13 +19,21 @@ function taskReducer(state, action) {
 
 function createStore(reducer, initialState) {
 	let state = initialState;
+	const listeners = [];
 	function getState() {
 		return state;
 	}
 	function dispatch(action) {
-		return (state = reducer(state, action));
+		state = reducer(state, action);
+		for (let i = 0; i < listeners.length; i++) {
+			const listener = listeners[i];
+			listener();
+		}
 	}
-	return { getState, dispatch };
+	function subscribe(listener) {
+		listeners.push(listener);
+	}
+	return { getState, dispatch, subscribe };
 }
 const store = createStore(taskReducer, [
 	{
@@ -40,13 +48,15 @@ const store = createStore(taskReducer, [
 	},
 ]);
 const App = () => {
-	const state = store.getState();
+	const [state, setState] = useState(store.getState());
+	useEffect(() => {
+		store.subscribe(() => setState(store.getState()));
+	}, []);
 	const complete = (elementId) => {
 		store.dispatch({
 			type: "task/completed",
 			payload: { id: elementId },
 		});
-		console.log(store.getState());
 	};
 	return (
 		<>
@@ -71,4 +81,3 @@ root.render(
 		<App />
 	</React.StrictMode>
 );
-
