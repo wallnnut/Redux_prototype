@@ -23,7 +23,7 @@ function createStore(reducer, initialState) {
 		return state;
 	}
 	function dispatch(action) {
-		return (state = taskReducer(state, action));
+		return (state = reducer(state, action));
 	}
 	return { getState, dispatch };
 }
@@ -33,19 +33,34 @@ const store = createStore(taskReducer, [
 		description: "description",
 		completed: false,
 	},
+	{
+		id: 2,
+		description: "description2",
+		completed: false,
+	},
 ]);
 const App = () => {
-	const complete = () => {
+	const state = store.getState();
+	const complete = (elementId) => {
 		store.dispatch({
 			type: "task/completed",
-			payload: { id: 1 },
+			payload: { id: elementId },
 		});
 		console.log(store.getState());
 	};
 	return (
 		<>
-			<button onClick={complete}>Complete</button>
 			<h1>App</h1>
+			<ul>
+				{state.map((s) => (
+					<li key={s.id}>
+						<p>{s.description}</p>
+						<p>{`Completed: ${s.completed}`}</p>
+						<button onClick={() => complete(s.id)}>Complete</button>
+						<hr />
+					</li>
+				))}
+			</ul>
 		</>
 	);
 };
