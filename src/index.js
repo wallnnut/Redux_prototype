@@ -1,62 +1,25 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
+import * as actions from "./store/actions";
 
-function taskReducer(state, action) {
-	switch (action.type) {
-		case "task/completed":
-			const newArray = [...state];
-			const index = newArray.findIndex(
-				(elem) => elem.id === action.payload.id
-			);
+import { initStore } from "./store/store";
 
-			newArray[index].completed = true;
-			return newArray;
+const store = initStore();
 
-		default:
-			break;
-	}
-}
-
-function createStore(reducer, initialState) {
-	let state = initialState;
-	const listeners = [];
-	function getState() {
-		return state;
-	}
-	function dispatch(action) {
-		state = reducer(state, action);
-		for (let i = 0; i < listeners.length; i++) {
-			const listener = listeners[i];
-			listener();
-		}
-	}
-	function subscribe(listener) {
-		listeners.push(listener);
-	}
-	return { getState, dispatch, subscribe };
-}
-const store = createStore(taskReducer, [
-	{
-		id: 1,
-		description: "description",
-		completed: false,
-	},
-	{
-		id: 2,
-		description: "description2",
-		completed: false,
-	},
-]);
 const App = () => {
 	const [state, setState] = useState(store.getState());
 	useEffect(() => {
 		store.subscribe(() => setState(store.getState()));
 	}, []);
-	const complete = (elementId) => {
-		store.dispatch({
-			type: "task/completed",
-			payload: { id: elementId },
-		});
+	const complete = (taskId) => {
+		store.dispatch(actions.completeTask(taskId));
+	};
+	const changeTitle = (taskId) => {
+		store.dispatch(actions.changeTitle(taskId));
+	};
+
+	const deleteTask = (taskId) => {
+		store.dispatch(actions.deleteTask(taskId));
 	};
 	return (
 		<>
@@ -64,9 +27,15 @@ const App = () => {
 			<ul>
 				{state.map((s) => (
 					<li key={s.id}>
-						<p>{s.description}</p>
+						<p>{s.title}</p>
 						<p>{`Completed: ${s.completed}`}</p>
 						<button onClick={() => complete(s.id)}>Complete</button>
+						<button onClick={() => changeTitle(s.id)}>
+							Change title
+						</button>
+						<button onClick={() => deleteTask(s.id)}>
+							delete task
+						</button>
 						<hr />
 					</li>
 				))}
